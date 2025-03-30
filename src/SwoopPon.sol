@@ -12,6 +12,8 @@ import {PoolId, PoolIdLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/
 import {StateLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/StateLibrary.sol";
 import {TokenVault} from "./TokenVault.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
+import {LPFeeLibrary} from "lib/uniswap-hooks/lib/v4-core/src/libraries/LPFeeLibrary.sol";
+
 
 
 contract SwoopPon is BaseOverrideFee, ERC20 {
@@ -38,8 +40,16 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
 
     uint24 public _fee = 30000;
 
+
+        IPoolManager manager;
+
+    function setManager(IPoolManager _manager) external {
+        manager = _manager;
+    }
+
     // Function to dynamically change the LP fee
-    function setFee(uint24 newFee) internal {
+    //Changed from internal to external
+    function setFee(uint24 newFee) external {
         _fee = newFee;
     }
 
@@ -50,17 +60,18 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         bytes calldata hookData
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
         // did swapper deposit into dev wallet
-        uint24 lpFee = _getFee(sender, key, params, hookData);
+      //  uint24 lpFee = _getFee(sender, key, params, hookData);
         bool paid = false;
-        paid = vault.chargeUser(sender);
+      //  paid = vault.chargeUser(sender);
 
         if (paid == false) { 
-            return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 500);
-        } else {
-            setFee(0);
+        
+            this.setFee(0);
         }
-        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
+        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, _fee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
     }
+
+
 
     function _afterSwap(
         address sender,
@@ -71,7 +82,7 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
     ) internal virtual override returns (bytes4, int128) {
         // if fee is 0, set it to 30000
         if (_fee == 0) {
-            setFee(30000);
+            this.setFee(30000);
         }
         
         // mint 1 token to sender
@@ -91,7 +102,7 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         return lpFee;
     }
 
-    function getChainlinkDataFeedLatestAnswerETH() public view returns (int256) {
+    function getChainlinkDataFeedLatestAnswerETH() virtual public returns (int256) {
         // prettier-ignore
         (
             /* uint80 roundID */
@@ -106,7 +117,7 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         return answer;
     }
 
-    function getChainlinkDataFeedLatestAnswerBTC() public view returns (int256) {
+    function getChainlinkDataFeedLatestAnswerBTC() virtual public returns (int256) {
         // prettier-ignore
         (
             /* uint80 roundID */
