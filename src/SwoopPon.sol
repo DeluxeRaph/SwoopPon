@@ -63,11 +63,8 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
       //  uint24 lpFee = _getFee(sender, key, params, hookData);
         bool paid = false;
       //  paid = vault.chargeUser(sender);
-
-        if (paid == false) { 
-        
-            this.setFee(0);
-        }
+    
+      
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, _fee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
     }
 

@@ -284,7 +284,6 @@ contract MockSwoopPonTest is Test, Deployers {
             assertEq(manager.protocolFeesAccrued(currency1), expectedProtocolFee);
         }
     }
-
     function _fetchPoolLPFee(PoolKey memory _key) internal view returns (uint256 lpFee) {
         PoolId id = _key.toId();
         (,,, lpFee) = manager.getSlot0(id);
