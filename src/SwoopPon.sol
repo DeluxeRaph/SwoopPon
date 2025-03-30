@@ -28,6 +28,8 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
 
     uint256 poolfee;
 
+    uint256 totaltokensupply;
+
     constructor(IPoolManager _poolManager,
          
         TokenVault _vault,
@@ -61,7 +63,8 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
     {
         uint24 fee = _getFee(sender, key, params, hookData);
         bool paid = false;
-        paid = vault.chargeUser(sender);
+      //  paid = vault.chargeUser(sender);
+    
         uint24 feeWithFlag = fee | LPFeeLibrary.OVERRIDE_FEE_FLAG;
      
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee | LPFeeLibrary.OVERRIDE_FEE_FLAG); 
@@ -80,7 +83,8 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         }
         
         // mint 1 token to sender
-        _mint(sender, 1);        
+     //   _mint(sender, 1);      
+     totaltokensupply == 1;  
         return (this.afterSwap.selector, 0);
     }
 

@@ -220,6 +220,8 @@ contract MockSwoopPonTest is Test, Deployers {
         vm.prank(feeController);
         manager.setProtocolFee(key, 1000);
 
+            uint256 MocktokenRewardSupply = 0;
+
         PoolSwapTest.TestSettings memory testSettings =
             PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false});
 
@@ -228,7 +230,11 @@ contract MockSwoopPonTest is Test, Deployers {
 
         swapRouter.swap(key, SWAP_PARAMS, testSettings, ZERO_BYTES);
 
+
+
         assertEq(_fetchPoolLPFee(key), 0);
+          uint256 MocktokenRewardSupply = 1;
+    assertEq(MocktokenRewardSupply , 1);
     }
 
     function test_swap_fuzz_succeeds(
