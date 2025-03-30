@@ -32,16 +32,20 @@ contract SwoopPonTest is Test, Deployers {
     MockOracleETH oracle;
     MockOracleBTC oracle2;
 
+    address swapper;
+
     function setUp() public {
         deployFreshManagerAndRouters();
 
         // Deploy our TOKEN contract
-        token = new MockERC20("SwoopPon", "Sp", 18);
+        token = new MockERC20("SwoopPon", "SP", 18);
         tokenCurrency = Currency.wrap(address(token));
+
+        swapper = address(1);
 
         // Mint a bunch of TOKEN to ourselves and to address(1)
         token.mint(address(this), 1000 ether);
-        token.mint(address(1), 1000 ether);
+        token.mint(swapper, 1000 ether);
 
         deployMintAndApprove2Currencies();
 
@@ -55,7 +59,6 @@ contract SwoopPonTest is Test, Deployers {
         );
 
         deployCodeTo("SwoopPon", abi.encode(manager), hookAddress);
-
 
         (key,) = initPoolAndAddLiquidity(
             currency0, currency1, IHooks(address(swoopPon)), LPFeeLibrary.DYNAMIC_FEE_FLAG, SQRT_PRICE_1_1
@@ -77,13 +80,21 @@ contract SwoopPonTest is Test, Deployers {
         oracle2 = new MockOracleBTC();
     }
 
-    function test_swap_with_while_deposit() public {
+    function test_swap_after_deposit() public {
+        PoolSwapTest.CallbackData memory callbackData = PoolSwapTest.CallbackData({
+            sender: swapper,
+            testSettings: PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
+            key: key,
+            params: IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -0.00001 ether, sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1}),
+            hookData: ZERO_BYTES
+        });
+
         PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
             .TestSettings({takeClaims: false, settleUsingBurn: false});
 
         IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
             zeroForOne: true,
-            amountSpecified: -0.00001 ether, //  swapper wants to swap 0.00001 ETH
+            amountSpecified: 1 ether, //  swapper wants to swap 0.00001 ETH
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
 
