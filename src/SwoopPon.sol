@@ -8,10 +8,14 @@ import {CurrencyLibrary, Currency} from "../lib/uniswap-hooks/lib/v4-core/src/ty
 import {BalanceDeltaLibrary, BalanceDelta} from "../lib/uniswap-hooks/lib/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/BeforeSwapDelta.sol";
 import {AggregatorV3Interface} from "../lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
+import {PoolId, PoolIdLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/PoolId.sol";
+import {StateLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/StateLibrary.sol";
 
 contract SwoopPon is BaseOverrideFee {
     using CurrencyLibrary for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
+    using StateLibrary for IPoolManager;
+    
 
     AggregatorV3Interface internal dataFeed;
     AggregatorV3Interface internal dataFeed2;
@@ -100,17 +104,12 @@ contract SwoopPon is BaseOverrideFee {
     }
 
 
-    function getpoolstate(PoolKey calldata key) external view returns (uint160 sqrtPriceX96, int24 tick,
-     uint24 protocolFee, uint24 lpFee){
-
-
-        (,,,lpFee) = _poolManager.getPoolState(key.toId());
-
-
-        uint24 poolFee = lpFee;
-
-        return (sqrtPriceX96, tick, poolFee, lpFee);
-     }
-
-    
+    function getPoolState(PoolKey calldata key) external view returns (
+    uint160 sqrtPriceX96,
+    int24 tick,
+    uint24 protocolFee,
+    uint24 lpFee
+) {
+    return poolManager.getSlot0(key.toId());
+}
 }

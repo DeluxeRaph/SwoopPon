@@ -65,7 +65,7 @@ contract SwoopPonTest is Test, Deployers {
     function test_ETHoracle () public {
        uint256 p = oracle.latestRoundData();
 
-        assert p = 200;
+        assertEq(p, 200);
 
 
     }
@@ -73,6 +73,6 @@ contract SwoopPonTest is Test, Deployers {
 
     function test_BTCoracle() public {
         uint p = oracle.latestRoundData();
-        assert p = 100;
+        assertEq(p, 100);
     }
 }
