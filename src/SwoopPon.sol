@@ -7,7 +7,7 @@ import {IPoolManager} from "../lib/uniswap-hooks/lib/v4-core/src/interfaces/IPoo
 import {CurrencyLibrary, Currency} from "../lib/uniswap-hooks/lib/v4-core/src/types/Currency.sol";
 import {BalanceDeltaLibrary, BalanceDelta} from "../lib/uniswap-hooks/lib/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/BeforeSwapDelta.sol";
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "../lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
 
 contract SwoopPon is BaseOverrideFee {
     using CurrencyLibrary for Currency;
@@ -100,7 +100,7 @@ contract SwoopPon is BaseOverrideFee {
     }
 
 
-    function getpoolstate(Poolkey calldata key) external view returns (uint160 sqrtPriceX96, int24 tick,
+    function getpoolstate(PoolKey calldata key) external view returns (uint160 sqrtPriceX96, int24 tick,
      uint24 protocolFee, uint24 lpFee){
 
 
@@ -111,10 +111,6 @@ contract SwoopPon is BaseOverrideFee {
 
         return (sqrtPriceX96, tick, poolFee, lpFee);
      }
-
-
-
-     
 
     
 }
