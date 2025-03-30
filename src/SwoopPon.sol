@@ -8,13 +8,14 @@ import {CurrencyLibrary, Currency} from "../lib/uniswap-hooks/lib/v4-core/src/ty
 import {BalanceDeltaLibrary, BalanceDelta} from "../lib/uniswap-hooks/lib/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/BeforeSwapDelta.sol";
 import {AggregatorV3Interface} from "../lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
+import {CalcLib} from "src/lib/CalcLib.sol";
 
 contract SwoopPon is BaseOverrideFee {
     using CurrencyLibrary for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
 
-    AggregatorV3Interface internal dataFeed;
-    AggregatorV3Interface internal dataFeed2;
+    AggregatorV3Interface internal dataFeedETH;
+    AggregatorV3Interface internal dataFeed2BTC;
 
     uint256 poolfee;
 
@@ -47,6 +48,21 @@ contract SwoopPon is BaseOverrideFee {
         bytes calldata hookData
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
         uint24 fee = _getFee(sender, key, params, hookData);
+
+    //We get the oracle 
+
+        uint256 ETHprice =  getChainlinkDataFeedLatestAnswerETH();
+
+        uint256 BTCprice = getChainlinkDataFeedLatestAnswerBTC();
+
+
+        
+
+
+  
+
+
+
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee);
     }
 
@@ -58,6 +74,40 @@ contract SwoopPon is BaseOverrideFee {
         bytes calldata hookData
     ) internal virtual override returns (bytes4, int128) {
         // Your logic here
+        
+
+
+
+          //We get the oracle 
+
+        uint256 ETHprice =  getChainlinkDataFeedLatestAnswerETH();
+
+        uint256 BTCprice = getChainlinkDataFeedLatestAnswerBTC();
+
+
+          //this logic is to calculate swoopon cost 
+
+          
+          //We use the swapParams to determine which oracle to use 
+
+        if (params.amountspecified > 0){
+
+        uintETHSwoopReward = CalcLib.calculateTI(ETHprice * amountspecified);
+
+        } else if (params.amountspecified < 0){
+
+        uintBTCSwoopReward = CalcLib.calculateTI(BTCprice * amountspecified);
+
+        } else {
+
+            revert("Invalid amount specified");
+        }
+
+        //Here we mint the swoopon reward for the user 
+
+        
+
+
         // Mint tokens to 
         return (this.afterSwap.selector, 0);
     }
@@ -73,7 +123,7 @@ contract SwoopPon is BaseOverrideFee {
         return _fee;
     }
 
-
+    //The ETH/USD chainlink oracle price on Unichain 
    function getChainlinkDataFeedLatestAnswerETH() public view returns (int) {
         // prettier-ignore
         (
@@ -82,11 +132,12 @@ contract SwoopPon is BaseOverrideFee {
             /*uint startedAt*/,
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
-        ) = dataFeed.latestRoundData();
+        ) = dataFeedETH.latestRoundData();
         return answer;
     }
 
 
+        //The BTC/USD chainlink oracle price on Unichain
        function getChainlinkDataFeedLatestAnswerBTC() public view returns (int) {
         // prettier-ignore
         (
@@ -95,7 +146,7 @@ contract SwoopPon is BaseOverrideFee {
             /*uint startedAt*/,
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
-        ) = dataFeed2.latestRoundData();
+        ) = dataFeed2BTC.latestRoundData();
         return answer;
     }
 
