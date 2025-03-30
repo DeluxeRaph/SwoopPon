@@ -10,27 +10,32 @@ import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "../lib/uniswap-hooks/lib/
 import {AggregatorV3Interface} from "../lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
 import {PoolId, PoolIdLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/PoolId.sol";
 import {StateLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/StateLibrary.sol";
+import {TokenVault} from "./TokenVault.sol";
+
 
 contract SwoopPon is BaseOverrideFee {
     using CurrencyLibrary for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
     using StateLibrary for IPoolManager;
 
+    TokenVault public vault;
+
     AggregatorV3Interface internal dataFeed;
     AggregatorV3Interface internal dataFeed2;
 
     uint256 poolfee;
 
-    constructor(IPoolManager _poolManager) BaseOverrideFee(_poolManager) {
-        dataFeed = AggregatorV3Interface(0xd9c93081210dFc33326B2af4C2c11848095E6a9a);
+    constructor(IPoolManager _poolManager, TokenVault _vault) BaseOverrideFee(_poolManager) {
+        vault = TokenVault(_vault);
 
+        dataFeed = AggregatorV3Interface(0xd9c93081210dFc33326B2af4C2c11848095E6a9a);
         dataFeed2 = AggregatorV3Interface(0x2AF69319fACBbc1ad77d56538B35c1f9FFe86dEF);
     }
 
     uint24 public _fee = 30000;
 
     // Function to dynamically change the LP fee
-    function setFee(uint24 newFee) external {
+    function setFee(uint24 newFee) internal {
         _fee = newFee;
     }
 
@@ -40,19 +45,32 @@ contract SwoopPon is BaseOverrideFee {
         IPoolManager.SwapParams calldata params,
         bytes calldata hookData
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
-        uint24 fee = _getFee(sender, key, params, hookData);
-        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee);
+        // did swapper deposit into dev wallet
+        uint24 lpFee = _getFee(sender, key, params, hookData);
+        bool paid = false;
+        paid = vault.chargeUser(sender);
+
+        if (paid == false) { 
+            return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 500);
+        } else {
+            setFee(0);
+        }
+        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
     }
 
     function _afterSwap(
-        address,
+        address sender,
         PoolKey calldata key,
         IPoolManager.SwapParams calldata params,
         BalanceDelta delta,
         bytes calldata hookData
     ) internal virtual override returns (bytes4, int128) {
+
+        setFee(30000);
         // Your logic here
+        vault.userBalances(sender);
         // Mint tokens to
+        
         return (this.afterSwap.selector, 0);
     }
 
@@ -63,6 +81,7 @@ contract SwoopPon is BaseOverrideFee {
         bytes calldata hookData
     ) internal virtual override returns (uint24) {
         // Return the current fee
+        uint24 lpFee;
         (,,, lpFee) = poolManager.getSlot0(key.toId());
         return lpFee;
     }
