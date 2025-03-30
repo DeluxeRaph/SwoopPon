@@ -220,16 +220,19 @@ contract MockSwoopPonTest is Test, Deployers {
         vm.prank(feeController);
         manager.setProtocolFee(key, 1000);
 
+
+        //This is the fee user pays for swaps 
        uint256 uniswapfee;
 
             uint256 MocktokenRewardSupplyforUser;
 
-
+        //when Rewardbalance for user becomes greater than the uniswap fee, the user will get a feeless swap
         if (MocktokenRewardSupplyforUser >= uniswapfee){
 
 
-            uint256 userfeeswap = 0;
+            uint256 uniswapfee = 0;
 
+            //user swoopon is burned to cover the swap fee. There is no partial reimbursement 
             MocktokenRewardSupplyforUser = 0;
         }
         
@@ -244,7 +247,7 @@ contract MockSwoopPonTest is Test, Deployers {
 
 
 
-     //   assertEq(_fetchPoolLPFee(key), 0);
+        //As the user continues to use regular swaps, they will be rewarded with swoopon
           MocktokenRewardSupplyforUser += 1;
     assertEq(MocktokenRewardSupplyforUser , 1);
     }
