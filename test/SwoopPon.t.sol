@@ -19,10 +19,10 @@ import {MockOracleBTC} from "test/mocks/MockOracleBTC.sol";
 import {MockOracleETH} from "test/mocks/MockOracleETH.sol";
 import {PoolSwapTest} from "../lib/uniswap-hooks/lib/v4-core/src/test/PoolSwapTest.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-
+import {TickMath} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/TickMath.sol";
 
 contract SwoopPonTest is Test, Deployers {
-    BaseOverrideFeeMock swoopPon;
+    SwoopPon swoopPon;
 
     MockERC20 token;
 
@@ -43,10 +43,20 @@ contract SwoopPonTest is Test, Deployers {
         token.mint(address(this), 1000 ether);
         token.mint(address(1), 1000 ether);
 
-        swoopPon = BaseOverrideFeeMock(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
-        deployCodeTo("test/mocks/BaseOverrideFeeMock.sol:BaseOverrideFeeMock", abi.encode(manager), address(swoopPon));
-
         deployMintAndApprove2Currencies();
+
+        // Deploy our hook with the proper flags
+        address hookAddress = address(
+            uint160(
+                Hooks.AFTER_INITIALIZE_FLAG |
+                    Hooks.BEFORE_SWAP_FLAG |
+                    Hooks.AFTER_SWAP_FLAG
+            )
+        );
+
+        deployCodeTo("SwoopPon", abi.encode(manager), hookAddress);
+
+
         (key,) = initPoolAndAddLiquidity(
             currency0, currency1, IHooks(address(swoopPon)), LPFeeLibrary.DYNAMIC_FEE_FLAG, SQRT_PRICE_1_1
         );
@@ -67,26 +77,18 @@ contract SwoopPonTest is Test, Deployers {
         oracle2 = new MockOracleBTC();
     }
 
-    function test_setFee() public {
-        uint24 fee = 500; // Example fee value
-        swoopPon.setFee(fee); // Assuming setFee is a function in SwoopPon
-        assertEq(swoopPon.fee(), fee); // Assuming fee() retrieves the current fee
+    function test_swap_with_while_deposit() public {
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({takeClaims: false, settleUsingBurn: false});
+
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.00001 ether, //  swapper wants to swap 0.00001 ETH
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        });
+
+        swapRouter.swap(key, params, testSettings, ZERO_BYTES);
     }
-
-    // function test_swap_with_no_deposit() public {
-    //     PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
-    //         .TestSettings({takeClaims: false, settleUsingBurn: false});
-
-    //     IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-    //         zeroForOne: true,
-    //         amountSpecified: -0.00001 ether,
-    //         sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
-    //     });
-
-    //     vm.startPrank(user);
-    //     manager.swap(currency0, currency1, 100, 0);
-    //     vm.stopPrank();
-    // }
 
     function test_ETHoracle() public {
         uint256 p = oracle.latestRoundData();
@@ -95,7 +97,7 @@ contract SwoopPonTest is Test, Deployers {
     }
 
     function test_BTCoracle() public {
-        uint256 p = oracle.latestRoundData();
+        uint256 p = oracle2.latestRoundData();
         assertEq(p, 100);
     }
 }
