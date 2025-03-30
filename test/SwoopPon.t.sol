@@ -21,19 +21,15 @@ import {MockOracleETH} from "test/Mockoracle/MockOracleETH.sol";
 contract SwoopPonTest is Test, Deployers {
     BaseOverrideFeeMock swoopPon;
 
-     MockOracleETH oracle;
+    MockOracleETH oracle;
 
-     MockOracleBTC oracle2;
+    MockOracleBTC oracle2;
 
     function setUp() public {
         deployFreshManagerAndRouters();
 
-
-
         swoopPon = BaseOverrideFeeMock(address(uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG)));
-        deployCodeTo(
-            "test/mocks/BaseOverrideFeeMock.sol:BaseOverrideFeeMock", abi.encode(manager), address(swoopPon)
-        );
+        deployCodeTo("test/mocks/BaseOverrideFeeMock.sol:BaseOverrideFeeMock", abi.encode(manager), address(swoopPon));
 
         deployMintAndApprove2Currencies();
         (key,) = initPoolAndAddLiquidity(
@@ -43,15 +39,9 @@ contract SwoopPonTest is Test, Deployers {
         vm.label(Currency.unwrap(currency0), "currency0");
         vm.label(Currency.unwrap(currency1), "currency1");
 
+        oracle = new MockOracleETH();
 
-          oracle = new MockOracleETH();
-
-          oracle2 = new MockOracleBTC();
-
-
-
-
-
+        oracle2 = new MockOracleBTC();
     }
 
     function test_setFee() public {
@@ -60,19 +50,14 @@ contract SwoopPonTest is Test, Deployers {
         assertEq(swoopPon.fee(), fee); // Assuming fee() retrieves the current fee
     }
 
-
-
-    function test_ETHoracle () public {
-       uint256 p = oracle.latestRoundData();
+    function test_ETHoracle() public {
+        uint256 p = oracle.latestRoundData();
 
         assertEq(p, 200);
-
-
     }
 
-
     function test_BTCoracle() public {
-        uint p = oracle.latestRoundData();
+        uint256 p = oracle.latestRoundData();
         assertEq(p, 100);
     }
 }

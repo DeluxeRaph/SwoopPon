@@ -15,29 +15,19 @@ contract SwoopPon is BaseOverrideFee {
     using CurrencyLibrary for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
     using StateLibrary for IPoolManager;
-    
 
     AggregatorV3Interface internal dataFeed;
     AggregatorV3Interface internal dataFeed2;
 
     uint256 poolfee;
 
-    
     constructor(IPoolManager _poolManager) BaseOverrideFee(_poolManager) {
+        dataFeed = AggregatorV3Interface(0xd9c93081210dFc33326B2af4C2c11848095E6a9a);
 
-        dataFeed = AggregatorV3Interface(
-            0xd9c93081210dFc33326B2af4C2c11848095E6a9a
-        );
-
-        dataFeed2 = AggregatorV3Interface(
-            0x2AF69319fACBbc1ad77d56538B35c1f9FFe86dEF
-        );
-        
+        dataFeed2 = AggregatorV3Interface(0x2AF69319fACBbc1ad77d56538B35c1f9FFe86dEF);
     }
 
     uint24 public _fee = 30000;
-
-    
 
     // Function to dynamically change the LP fee
     function setFee(uint24 newFee) external {
@@ -62,7 +52,7 @@ contract SwoopPon is BaseOverrideFee {
         bytes calldata hookData
     ) internal virtual override returns (bytes4, int128) {
         // Your logic here
-        // Mint tokens to 
+        // Mint tokens to
         return (this.afterSwap.selector, 0);
     }
 
@@ -73,43 +63,37 @@ contract SwoopPon is BaseOverrideFee {
         bytes calldata hookData
     ) internal virtual override returns (uint24) {
         // Return the current fee
-
-        return _fee;
+        (,,, lpFee) = poolManager.getSlot0(key.toId());
+        return lpFee;
     }
 
-
-   function getChainlinkDataFeedLatestAnswerETH() public view returns (int) {
+    function getChainlinkDataFeedLatestAnswerETH() public view returns (int256) {
         // prettier-ignore
         (
-            /* uint80 roundID */,
-            int answer,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
+            /* uint80 roundID */
+            ,
+            int256 answer,
+            /*uint startedAt*/
+            ,
+            /*uint timeStamp*/
+            ,
             /*uint80 answeredInRound*/
         ) = dataFeed.latestRoundData();
         return answer;
     }
 
-
-       function getChainlinkDataFeedLatestAnswerBTC() public view returns (int) {
+    function getChainlinkDataFeedLatestAnswerBTC() public view returns (int256) {
         // prettier-ignore
         (
-            /* uint80 roundID */,
-            int answer,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
+            /* uint80 roundID */
+            ,
+            int256 answer,
+            /*uint startedAt*/
+            ,
+            /*uint timeStamp*/
+            ,
             /*uint80 answeredInRound*/
         ) = dataFeed2.latestRoundData();
         return answer;
     }
-
-
-    function getPoolState(PoolKey calldata key) external view returns (
-    uint160 sqrtPriceX96,
-    int24 tick,
-    uint24 protocolFee,
-    uint24 lpFee
-) {
-    return poolManager.getSlot0(key.toId());
-}
 }
