@@ -51,4 +51,8 @@ contract TokenVault {
         require(token.transfer(msg.sender, amount), "Withdraw failed");
         emit Withdraw(msg.sender, amount);
     }
+
+    function getUserBalance(address user) external view returns (uint256) {
+        return userBalances[user];
+    }
 }

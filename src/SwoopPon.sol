@@ -28,7 +28,8 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
 
     uint256 poolfee;
 
-    constructor(IPoolManager _poolManager, 
+    constructor(IPoolManager _poolManager,
+         
         TokenVault _vault,
         string memory _name,
         string memory _symbol) BaseOverrideFee(_poolManager) ERC20(_name, _symbol, 18) {
@@ -38,7 +39,7 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         dataFeed2 = AggregatorV3Interface(0x2AF69319fACBbc1ad77d56538B35c1f9FFe86dEF);
     }
 
-    uint24 public _fee = 30000;
+    uint24 public baseFee = 3000;
 
 
         IPoolManager manager;
@@ -50,25 +51,21 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
     // Function to dynamically change the LP fee
     //Changed from internal to external
     function setFee(uint24 newFee) external {
-        _fee = newFee;
+       baseFee = newFee;
     }
 
-    function _beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata hookData
-    ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
-        // did swapper deposit into dev wallet
-      //  uint24 lpFee = _getFee(sender, key, params, hookData);
+    function _beforeSwap(address sender, PoolKey calldata key, IPoolManager.SwapParams calldata params, bytes calldata hookData)
+        internal
+        override
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
+        uint24 fee = _getFee(sender, key, params, hookData);
         bool paid = false;
-      //  paid = vault.chargeUser(sender);
-    
-      
-        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, _fee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
+        paid = vault.chargeUser(sender);
+        uint24 feeWithFlag = fee | LPFeeLibrary.OVERRIDE_FEE_FLAG;
+     
+        return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee | LPFeeLibrary.OVERRIDE_FEE_FLAG); 
     }
-
-
 
     function _afterSwap(
         address sender,
@@ -78,7 +75,7 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         bytes calldata hookData
     ) internal virtual override returns (bytes4, int128) {
         // if fee is 0, set it to 30000
-        if (_fee == 0) {
+        if (baseFee == 0) {
             this.setFee(30000);
         }
         
@@ -87,16 +84,19 @@ contract SwoopPon is BaseOverrideFee, ERC20 {
         return (this.afterSwap.selector, 0);
     }
 
-    function _getFee(
+     function _getFee(
         address sender,
         PoolKey calldata key,
         IPoolManager.SwapParams calldata params,
         bytes calldata hookData
-    ) internal virtual override returns (uint24) {
-        // Return the current fee
-        uint24 lpFee;
-        (,,, lpFee) = poolManager.getSlot0(key.toId());
-        return lpFee;
+    ) internal view override returns (uint24) {
+        uint24 fee = baseFee;
+        uint256 swapperBalance = vault.getUserBalance(sender);
+
+        if (swapperBalance > 5 ether) {
+            return fee = 0;
+        }
+        return baseFee;
     }
 
     function getChainlinkDataFeedLatestAnswerETH() virtual public returns (int256) {
