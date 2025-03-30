@@ -90,11 +90,11 @@ contract SwoopPon is BaseOverrideFee {
           
           //We use the swapParams to determine which oracle to use 
 
-        if (params.amountspecified > 0){
+        if (params.zeroForOne == true){
 
         uintETHSwoopReward = CalcLib.calculateTI(ETHprice * amountspecified);
 
-        } else if (params.amountspecified < 0){
+        } else if (params.zeroForOne == false){
 
         uintBTCSwoopReward = CalcLib.calculateTI(BTCprice * amountspecified);
 
@@ -105,7 +105,7 @@ contract SwoopPon is BaseOverrideFee {
 
         //Here we mint the swoopon reward for the user 
 
-        
+
 
 
         // Mint tokens to 

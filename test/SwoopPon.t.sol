@@ -15,11 +15,14 @@ import {Deployers} from "../lib/uniswap-hooks/lib/v4-core/test/utils/Deployers.s
 import {BaseOverrideFeeMock} from "../lib/uniswap-hooks/test/mocks/BaseOverrideFeeMock.sol";
 import {IHooks} from "../lib/uniswap-hooks/lib/v4-core/src/interfaces/IHooks.sol";
 import {LPFeeLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/LPFeeLibrary.sol";
-import {MockOracleBTC} from "test/Mockoracle/MockOracleBTC.sol";
-import {MockOracleETH} from "test/Mockoracle/MockOracleETH.sol";
+import {MockSwoopPon} from "test/Mock/MockSwoopPon.sol";
 
 contract SwoopPonTest is Test, Deployers {
+
+    using PoolIdLibrary for PoolKey;
     BaseOverrideFeeMock swoopPon;
+
+    MockSwoopPon mockSwoopPon;
 
      MockOracleETH oracle;
 
@@ -27,6 +30,8 @@ contract SwoopPonTest is Test, Deployers {
 
     function setUp() public {
         deployFreshManagerAndRouters();
+
+        
 
 
 
@@ -48,11 +53,62 @@ contract SwoopPonTest is Test, Deployers {
 
           oracle2 = new MockOracleBTC();
 
+           // Initialize a pool
+        (key, ) = initPool(
+            currency0,
+            currency1,
+            hook,
+            LPFeeLibrary.DYNAMIC_FEE_FLAG, // Set the `DYNAMIC_FEE_FLAG` in place of specifying a fixed fee
+            SQRT_PRICE_1_1
+        );
+
+
+
+        
 
 
 
 
     }
+
+
+
+
+    function test_swapWorks() public {
+        modifyLiquidityRouter.modifyLiquidity(
+            key,
+            IPoolManager.ModifyLiquidityParams({
+                tickLower: -60,
+                tickUpper: 60,
+                liquidityDelta: 100 ether,
+                salt: bytes32(0)
+            }),
+            ZERO_BYTES
+        );
+
+          IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.00001 ether,
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        });
+
+          uint256 balanceOfToken1Before = currency1.balanceOfSelf();
+
+         swapRouter.swap(key, params, testSettings, ZERO_BYTES);
+
+         uint256  balanceOfToken1After = currency1.balanceOfSelf();
+
+        assertGt(balanceOfToken1After, balanceOfToken1Before);
+
+
+    }
+
+
+
+
+
+
+
 
     function test_setFee() public {
         uint24 fee = 500; // Example fee value
