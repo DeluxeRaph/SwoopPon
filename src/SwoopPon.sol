@@ -11,9 +11,10 @@ import {AggregatorV3Interface} from "../lib/foundry-chainlink-toolkit/src/interf
 import {PoolId, PoolIdLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/PoolId.sol";
 import {StateLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/StateLibrary.sol";
 import {TokenVault} from "./TokenVault.sol";
+import {ERC20} from "solmate/src/tokens/ERC20.sol";
 
 
-contract SwoopPon is BaseOverrideFee {
+contract SwoopPon is BaseOverrideFee, ERC20 {
     using CurrencyLibrary for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
     using StateLibrary for IPoolManager;
@@ -25,7 +26,10 @@ contract SwoopPon is BaseOverrideFee {
 
     uint256 poolfee;
 
-    constructor(IPoolManager _poolManager, TokenVault _vault) BaseOverrideFee(_poolManager) {
+    constructor(IPoolManager _poolManager, 
+        TokenVault _vault,
+        string memory _name,
+        string memory _symbol) BaseOverrideFee(_poolManager) ERC20(_name, _symbol, 18) {
         vault = TokenVault(_vault);
 
         dataFeed = AggregatorV3Interface(0xd9c93081210dFc33326B2af4C2c11848095E6a9a);
@@ -65,12 +69,13 @@ contract SwoopPon is BaseOverrideFee {
         BalanceDelta delta,
         bytes calldata hookData
     ) internal virtual override returns (bytes4, int128) {
-
-        setFee(30000);
-        // Your logic here
-        vault.userBalances(sender);
-        // Mint tokens to
+        // if fee is 0, set it to 30000
+        if (_fee == 0) {
+            setFee(30000);
+        }
         
+        // mint 1 token to sender
+        _mint(sender, 1);        
         return (this.afterSwap.selector, 0);
     }
 

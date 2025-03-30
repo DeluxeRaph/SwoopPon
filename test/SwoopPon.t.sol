@@ -40,7 +40,6 @@ contract SwoopPonTest is Test, Deployers {
         vm.label(Currency.unwrap(currency1), "currency1");
 
         oracle = new MockOracleETH();
-
         oracle2 = new MockOracleBTC();
     }
 
@@ -49,6 +48,12 @@ contract SwoopPonTest is Test, Deployers {
         swoopPon.setFee(fee); // Assuming setFee is a function in SwoopPon
         assertEq(swoopPon.fee(), fee); // Assuming fee() retrieves the current fee
     }
+
+    // function test_swap_with_no_deposit() public {
+    //     vm.startPrank(user);
+    //     manager.swap(currency0, currency1, 100, 0);
+    //     vm.stopPrank();
+    // }
 
     function test_ETHoracle() public {
         uint256 p = oracle.latestRoundData();
