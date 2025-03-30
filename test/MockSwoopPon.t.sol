@@ -229,6 +229,8 @@ contract MockSwoopPonTest is Test, Deployers {
 
 
             uint256 userfeeswap = 0;
+
+            MocktokenRewardSupplyforUser = 0;
         }
         
 
