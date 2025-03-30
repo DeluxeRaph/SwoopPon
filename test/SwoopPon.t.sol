@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {SwoopPon} from "../src/SwoopPon.sol";
-import {Currency} from "v4-core/src/types/Currency.sol";
+import {Currency} from "../lib/uniswap-hooks/lib/v4-core/src/types/Currency.sol";
 import {BaseOverrideFee} from "../lib/uniswap-hooks/src/fee/BaseOverrideFee.sol";
 import {PoolKey} from "../lib/uniswap-hooks/lib/v4-core/src/types/PoolKey.sol";
 import {IPoolManager} from "../lib/uniswap-hooks/lib/v4-core/src/interfaces/IPoolManager.sol";
@@ -11,10 +11,10 @@ import {CurrencyLibrary, Currency} from "../lib/uniswap-hooks/lib/v4-core/src/ty
 import {BalanceDeltaLibrary, BalanceDelta} from "../lib/uniswap-hooks/lib/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/types/BeforeSwapDelta.sol";
 import {Hooks} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/Hooks.sol";
-import {Deployers} from "v4-core/test/utils/Deployers.sol";
+import {Deployers} from "../lib/uniswap-hooks/lib/v4-core/test/utils/Deployers.sol";
 import {BaseOverrideFeeMock} from "../lib/uniswap-hooks/test/mocks/BaseOverrideFeeMock.sol";
-import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
-import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
+import {IHooks} from "../lib/uniswap-hooks/lib/v4-core/src/interfaces/IHooks.sol";
+import {LPFeeLibrary} from "../lib/uniswap-hooks/lib/v4-core/src/libraries/LPFeeLibrary.sol";
 import {MockOracleBTC} from "test/Mockoracle/MockOracleBTC.sol";
 import {MockOracleETH} from "test/Mockoracle/MockOracleETH.sol";
 
